@@ -1,3 +1,4 @@
+import copy
 import csv
 import itertools
 import sys
@@ -63,13 +64,7 @@ def main():
     # Loop over all sets of people who might have the trait
     names = set(people)
 
-    print(f'names set: {names}')
-    print(f'powerset: {powerset(names)}')
-
     for have_trait in powerset(names):
-
-        print(f'loop have_trait: {have_trait}')
-
         # Check if current set of people violates known information
         fails_evidence = any(
             (people[person]["trait"] is not None and
@@ -77,17 +72,14 @@ def main():
             for person in names
         )
         if fails_evidence:
-            print('failed evidence')
             continue
 
         # Loop over all sets of people who might have the gene
         for one_gene in powerset(names):
-            print(f'one_gene from powerset: {one_gene}')
             for two_genes in powerset(names - one_gene):
-                print(f'two_genes in powerset: {two_genes}')
-
                 # Update probabilities with new joint probability
                 p = joint_probability(people, one_gene, two_genes, have_trait)
+                print(f'joint probability: {p}')
                 update(probabilities, one_gene, two_genes, have_trait, p)
 
     # Ensure probabilities sum to 1
@@ -137,6 +129,24 @@ def powerset(s):
     ]
 
 
+def mothers(people, person, ancestor_list):
+    # recursively get mothers
+    new_mother = people.get(person, {}).get("mother", None)
+    if new_mother == None:
+        return ancestor_list
+    ancestor_list.append(new_mother)
+    return mothers(people, new_mother, ancestor_list)
+
+
+def fathers(people, person, ancestor_list):
+    # recursively get fathers
+    new_father = people.get(person, {}).get("father", None)
+    if new_father == None:
+        return ancestor_list
+    ancestor_list.append(new_father)
+    return fathers(people, new_father, ancestor_list)
+
+
 def joint_probability(people, one_gene, two_genes, have_trait):
     """
     Compute and return a joint probability.
@@ -148,13 +158,117 @@ def joint_probability(people, one_gene, two_genes, have_trait):
         * everyone in set `have_trait` has the trait, and
         * everyone not in set` have_trait` does not have the trait.
     """
-    print('inside joint_probability function')
+    one_gene = {"Harry"}
+    two_genes = {"James"}
+    has_trait = {"James"}
+
     print(f'people: {people}')
     print(f'one_gene: {one_gene}')
     print(f'two_genes: {two_genes}')
     print(f'have_trait: {have_trait}')
 
-    raise NotImplementedError
+    # unconditional one_gene probabilities
+    u_one_gene_list = list(one_gene)
+    u_p_one_gene = []
+    if len(u_one_gene_list) != 0:
+        for person in u_one_gene_list:
+            u_p_one_gene.append(PROBS["gene"][1])
+
+    # unconditional two_genes probabilities
+    u_two_genes_list = list(two_genes)
+    u_p_two_genes = []
+    if len(u_two_genes_list) != 0:
+        for person in u_two_genes_list:
+            u_p_two_genes.append(PROBS["gene"][2])
+
+    # unconditional no_gene probabilities
+    u_no_gene_list = []
+    u_p_no_gene = []
+    for person in people:
+        if person not in one_gene and person not in two_genes:
+            u_no_gene_list.append(person)
+
+    if len(u_no_gene_list) != 0:
+        for person in u_no_gene_list:
+            u_p_no_gene.append(PROBS["gene"][0])
+
+    # have_trait probabilities
+    have_trait_list = list(have_trait)
+    p_have_trait = []
+    if len(have_trait_list) != 0:
+        for person in have_trait_list:
+            p_have_trait.append(PROBS["trait"][0][True])
+
+    # no_trait probabilities, given no gene
+    no_trait_no_gene_list = []
+    p_no_trait_no_gene = []
+
+    for person in people:
+        if person not in have_trait:
+            if person not in one_gene:
+                if person not in two_genes:
+                    no_trait_no_gene_list.append(person)
+
+    if len(no_trait_no_gene_list) != 0:
+        for person in no_trait_no_gene_list:
+            p_no_trait_no_gene.append(PROBS["trait"][0][False])
+
+    print(f'u_one_gene_list: {u_one_gene_list}')
+    print(f'u_p_one_gene: {u_p_one_gene}')
+    print(f'u_two_genes_list: {u_two_genes_list}')
+    print(f'u_p_two_genes: {u_p_two_genes}')
+    print(f'u_no_gene_list: {u_no_gene_list}')
+    print(f'u_p_no_gene: {u_p_no_gene}')
+    print(f'have_trait_list: {have_trait_list}')
+    print(f'p_have_trait: {p_have_trait}')
+    print(f'no_trait_no_gene_list: {no_trait_no_gene_list}')
+    print(f'p_no_trait_no_gene: {p_no_trait_no_gene}')
+
+    # iterate through people
+    for person in people:
+        p = 0
+        p_trait = 0
+
+        have_parents = False
+        if people[person]["mother"] or people[person]["father"]:
+            have_parents = True
+
+        # calculate one_gene probability
+        if person in one_gene:
+            if not have_parents:
+                # no parents, use unconditional probability
+                p = PROBS["trait"][1]
+            else:
+                # have parents, calculate probability
+                print('getting parents')
+                mothers_list = []
+                mothers_list = mothers(people, person, mothers_list)
+                fathers_list = []
+                fathers_list = fathers(people, person, fathers_list)
+                print('back in joint_probability')
+                print(f'mothers_list: {mothers_list}')
+                print(f'fathers_list: {fathers_list}')
+                # gets gene from mother, not father
+
+                # gets gene from father, not mother
+
+            if person in have_trait:
+                p_trait = PROBS["trait"][1][True]
+            else:
+                p_trait = PROBS["trait"][1][False]
+
+        # calculate two_genes probability
+        if person in two_genes:
+            if not have_parents:
+                p = PROBS["gene"][2]
+
+            if person in have_trait:
+                p_trait = PROBS["trait"][2][True]
+            else:
+                p_trait = PROBS["trait"][2][False]
+
+            p_two_genes = p * p_trait
+            print(f'p_two_genes: {p_two_genes}')
 
 
 def update(probabilities, one_gene, two_genes, have_trait, p):
