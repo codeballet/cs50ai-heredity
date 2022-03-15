@@ -133,6 +133,7 @@ def mothers(people, person, ancestor_list):
     # recursively get mothers
     new_mother = people.get(person, {}).get("mother", None)
     if new_mother == None:
+        # base case
         return ancestor_list
     ancestor_list.append(new_mother)
     return mothers(people, new_mother, ancestor_list)
@@ -142,6 +143,7 @@ def fathers(people, person, ancestor_list):
     # recursively get fathers
     new_father = people.get(person, {}).get("father", None)
     if new_father == None:
+        # base case
         return ancestor_list
     ancestor_list.append(new_father)
     return fathers(people, new_father, ancestor_list)
