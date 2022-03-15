@@ -246,7 +246,7 @@ def joint_probability(people, one_gene, two_genes, have_trait):
         # calculate one_gene probability
         if person in one_gene:
             if not have_parents:
-                # no parents, use unconditional probability
+                # no parents, unconditional probability
                 p_gene = PROBS["gene"][1]
             else:
                 pass
