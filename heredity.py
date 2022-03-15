@@ -228,28 +228,30 @@ def joint_probability(people, one_gene, two_genes, have_trait):
 
     # iterate through people
     for person in people:
-        p = 0
+        p_gene = 0
         p_trait = 0
-
+        mothers_list = []
+        fathers_list = []
         have_parents = False
+
         if people[person]["mother"] or people[person]["father"]:
             have_parents = True
+            # get parents
+            print('getting parents')
+            mothers_list = mothers(people, person, mothers_list)
+            fathers_list = fathers(people, person, fathers_list)
+            print(f'mothers_list: {mothers_list}')
+            print(f'fathers_list: {fathers_list}')
 
         # calculate one_gene probability
         if person in one_gene:
             if not have_parents:
                 # no parents, use unconditional probability
-                p = PROBS["trait"][1]
+                p_gene = PROBS["gene"][1]
             else:
+                pass
                 # have parents, calculate probability
-                print('getting parents')
-                mothers_list = []
-                mothers_list = mothers(people, person, mothers_list)
-                fathers_list = []
-                fathers_list = fathers(people, person, fathers_list)
-                print('back in joint_probability')
-                print(f'mothers_list: {mothers_list}')
-                print(f'fathers_list: {fathers_list}')
+
                 # gets gene from mother, not father
 
                 # gets gene from father, not mother
@@ -262,14 +264,14 @@ def joint_probability(people, one_gene, two_genes, have_trait):
         # calculate two_genes probability
         if person in two_genes:
             if not have_parents:
-                p = PROBS["gene"][2]
+                p_gene = PROBS["gene"][2]
 
             if person in have_trait:
                 p_trait = PROBS["trait"][2][True]
             else:
                 p_trait = PROBS["trait"][2][False]
 
-            p_two_genes = p * p_trait
+            p_two_genes = p_gene * p_trait
             print(f'p_two_genes: {p_two_genes}')
 
 
