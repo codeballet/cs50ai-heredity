@@ -296,6 +296,8 @@ def joint_probability(people, one_gene, two_genes, have_trait):
         parents = dict()
         parents = ancestors(people, person, parents)
 
+        # calculate no_gene probability
+
         # calculate one_gene probability
         if person in one_gene:
             if parents:
@@ -348,26 +350,32 @@ def joint_probability(people, one_gene, two_genes, have_trait):
                 # no parents, unconditional probability
                 p_one_gene = PROBS["gene"][1]
 
-            # probability of having traint
+            # probability of having traint with one gene
             if person in have_trait:
                 p_trait = PROBS["trait"][1][True]
             else:
                 p_trait = PROBS["trait"][1][False]
 
+            # calculate probability of one gene and trait status
+            p_one_gene_trait = p_one_gene * p_trait
+            print(
+                f'p_one_gene_trait: {p_one_gene_trait}')
+
         # calculate two_genes probability
         if person in two_genes:
             if not parents:
-                p_gene = PROBS["gene"][2]
+                p_two_genes = PROBS["gene"][2]
 
             if person in have_trait:
                 p_trait = PROBS["trait"][2][True]
             else:
                 p_trait = PROBS["trait"][2][False]
 
-            p_two_genes = p_gene * p_trait
-            print(f'p_two_genes: {p_two_genes}')
+            p_two_genes_trait = p_two_genes * p_trait
+            print(f'p_two_genes_trait: {p_two_genes_trait}')
 
     p_joint = p_no_gene_trait * p_one_gene_trait * p_two_genes_trait
+    print(f'p_joint probability: {p_joint}')
 
     return p_joint
 
