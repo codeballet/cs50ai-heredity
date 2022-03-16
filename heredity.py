@@ -129,31 +129,28 @@ def powerset(s):
     ]
 
 
-def mothers(people, person, ancestor_list):
-    # recursively get mothers
-    new_mother = people.get(person, {}).get("mother", None)
-    if new_mother == None:
-        # base case
-        return ancestor_list
-    ancestor_list.append(new_mother)
-    return mothers(people, new_mother, ancestor_list)
+# def mothers(people, person, ancestor_list):
+#     # recursively get mothers
+#     new_mother = people.get(person, {}).get("mother", None)
+#     if new_mother == None:
+#         # base case
+#         return ancestor_list
+#     ancestor_list.append(new_mother)
+#     return mothers(people, new_mother, ancestor_list)
 
 
-def fathers(people, person, ancestor_list):
-    # recursively get fathers
-    new_father = people.get(person, {}).get("father", None)
-    if new_father == None:
-        # base case
-        return ancestor_list
-    ancestor_list.append(new_father)
-    return fathers(people, new_father, ancestor_list)
+# def fathers(people, person, ancestor_list):
+#     # recursively get fathers
+#     new_father = people.get(person, {}).get("father", None)
+#     if new_father == None:
+#         # base case
+#         return ancestor_list
+#     ancestor_list.append(new_father)
+#     return fathers(people, new_father, ancestor_list)
 
 
 def ancestors(people, person, ancestor_dict):
-    print('in ancestors')
-    print(f'person: {person}')
-
-    # get ancestors of two generations
+    # get ancestors two generations back
     mother = people.get(person, {}).get("mother", None)
     father = people.get(person, {}).get("father", None)
     mother_mother = people.get(mother, {}).get("mother", None)
@@ -161,15 +158,13 @@ def ancestors(people, person, ancestor_dict):
     father_mother = people.get(father, {}).get("mother", None)
     father_father = people.get(father, {}).get("father", None)
 
-    print(f'mother: {mother}')
-    print(f'father: {father}')
-
+    # lists of ancestors
     parents = [mother, father]
     mother_grandparents = [mother_mother, mother_father]
     father_grandparents = [father_mother, father_father]
 
     if all(v is None for v in parents):
-        # base case, no parents
+        # no parents found
         return False
 
     # add parents to dictionary
@@ -178,16 +173,29 @@ def ancestors(people, person, ancestor_dict):
 
     # check for grandparents
     if not all(v is None for v in mother_grandparents):
-        # mother has parents
+        # mother has parents, add to dict
         ancestor_dict["mother_mother"] = mother_mother
         ancestor_dict["mother_father"] = mother_father
 
     if not all(v is None for v in father_grandparents):
-        # father has parents
+        # father has parents, add to dict
         ancestor_dict["father_mother"] = father_mother
         ancestor_dict["father_father"] = father_father
 
     return ancestor_dict
+
+
+def gene_state(person, one_gene, two_genes):
+    if person in one_gene:
+        return 1
+    elif person in two_genes:
+        return 2
+    else:
+        return 0
+
+
+def prob_uncond(person, count):
+    return PROBS["gene"][count]
 
 
 def joint_probability(people, one_gene, two_genes, have_trait):
@@ -201,9 +209,11 @@ def joint_probability(people, one_gene, two_genes, have_trait):
         * everyone in set `have_trait` has the trait, and
         * everyone not in set` have_trait` does not have the trait.
     """
-    one_gene = {"Rose"}
-    two_genes = {"Molly"}
-    has_trait = {"Rose"}
+    p_joint = 0
+
+    one_gene = {"Harry"}
+    two_genes = {"James"}
+    have_trait = {"James"}
 
     print(f'people: {people}')
     print(f'one_gene: {one_gene}')
@@ -267,25 +277,78 @@ def joint_probability(people, one_gene, two_genes, have_trait):
     print(f'no_trait_no_gene_list: {no_trait_no_gene_list}')
     print(f'p_no_trait_no_gene: {p_no_trait_no_gene}')
 
+    # variables for joint probability calculation
+    p_no_gene_trait = 0
+    p_one_gene_trait = 0
+    p_two_genes_trait = 0
+
     # iterate through people
     for person in people:
-        p_gene = 0
+        print(f'person: {person}')
+        p_no_gene = 0
+        p_one_gene = 0
+        p_two_genes = 0
+        p_gene_mother = 0
+        p_gene_mother_not = 0
+        p_gene_father = 0
+        p_gene_father_not = 0
         p_trait = 0
         parents = dict()
         parents = ancestors(people, person, parents)
 
         # calculate one_gene probability
         if person in one_gene:
-            if not parents:
-                # unconditional probability
-                p_gene = PROBS["gene"][1]
+            if parents:
+                # conditional probability
+                if len(parents) == 2:
+                    # no grandparents
+                    mother = parents["mother"]
+                    father = parents["father"]
+                    print(f'mother: {mother}')
+                    print(f'father: {father}')
+
+                    mother_gene_state = gene_state(mother, one_gene, two_genes)
+                    father_gene_state = gene_state(father, one_gene, two_genes)
+                    print(f'mother_gene_state: {mother_gene_state}')
+                    print(f'father_gene_state: {father_gene_state}')
+
+                    # probability of getting gene from mother
+                    if mother_gene_state == 0:
+                        p_gene_mother = PROBS["mutation"]
+                        p_gene_mother_not = 1 - p_gene_mother
+                    elif mother_gene_state == 1:
+                        p_gene_mother = 0.5
+                        p_gene_mother_not = 1 - p_gene_mother
+                    else:
+                        # mother has two genes
+                        p_gene_mother = 1 - PROBS["mutation"]
+                        p_gene_mother_not = 1 - p_gene_mother
+
+                    # probability of getting gene from father
+                    if father_gene_state == 0:
+                        p_gene_father = PROBS["mutation"]
+                        p_gene_father_not = 1 - p_gene_father
+                    elif father_gene_state == 1:
+                        p_gene_father = 0.5
+                        p_gene_father_not = 1 - p_gene_father
+                    else:
+                        # father has two genes
+                        p_gene_father = 1 - PROBS["mutation"]
+                        p_gene_father_not = 1 - p_gene_father
+
+                    # either gene comes from mother, not father; or not from mother, but father
+                    p_one_gene = p_gene_mother * p_gene_father_not + p_gene_mother_not * p_gene_father
+                    print(f'p_one_gene: {p_one_gene}')
+
+                # add probabilities for 2 grandparents
+
+                # add probabilities for 4 grandparents
+
             else:
-                # have parents, conditional probability
+                # no parents, unconditional probability
+                p_one_gene = PROBS["gene"][1]
 
-                # gets gene from mother, not father
-
-                # gets gene from father, not mother
-
+            # probability of having traint
             if person in have_trait:
                 p_trait = PROBS["trait"][1][True]
             else:
@@ -303,6 +366,10 @@ def joint_probability(people, one_gene, two_genes, have_trait):
 
             p_two_genes = p_gene * p_trait
             print(f'p_two_genes: {p_two_genes}')
+
+    p_joint = p_no_gene_trait * p_one_gene_trait * p_two_genes_trait
+
+    return p_joint
 
 
 def update(probabilities, one_gene, two_genes, have_trait, p):
