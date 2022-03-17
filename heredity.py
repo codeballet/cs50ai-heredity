@@ -80,7 +80,6 @@ def main():
             for two_genes in powerset(names - one_gene):
                 # Update probabilities with new joint probability
                 p = joint_probability(people, one_gene, two_genes, have_trait)
-                print(f'joint probability: {p}')
                 update(probabilities, one_gene, two_genes, have_trait, p)
 
     # Ensure probabilities sum to 1
@@ -235,10 +234,11 @@ def joint_probability(people, one_gene, two_genes, have_trait):
         * everyone not in set` have_trait` does not have the trait.
     """
     # variables for joint probability calculation
-    p_joint = 0
+    p_joint = 1
     p_no_gene_trait = 1
     p_one_gene_trait = 1
     p_two_genes_trait = 1
+    p_register = []
 
     # iterate through people
     for person in people:
@@ -266,6 +266,9 @@ def joint_probability(people, one_gene, two_genes, have_trait):
             # calculate probability of one gene and trait status
             p_one_gene_trait = p_gene * p_trait
 
+            # register the calculation
+            p_register.append(p_one_gene_trait)
+
         # calculate two_genes probability
         elif person in two_genes:
             if parents:
@@ -284,6 +287,9 @@ def joint_probability(people, one_gene, two_genes, have_trait):
 
             # calculate probability of two genes and trait status
             p_two_genes_trait = p_gene * p_trait
+
+            # register the calculation
+            p_register.append(p_two_genes_trait)
 
         # calculate no_gene probability
         else:
@@ -304,7 +310,12 @@ def joint_probability(people, one_gene, two_genes, have_trait):
             # calculate probability of no gene and trait status
             p_no_gene_trait = p_gene * p_trait
 
-    p_joint = p_no_gene_trait * p_one_gene_trait * p_two_genes_trait
+            # register the calculation
+            p_register.append(p_no_gene_trait)
+
+    # calculate entire joint probability
+    for p in p_register:
+        p_joint *= p
 
     return p_joint
 
