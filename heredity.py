@@ -244,6 +244,16 @@ def gene_state(person, one_gene, two_genes):
         return 0
 
 
+def normalize_arr(arr):
+    print('inside normalize_arr')
+    print(f'arr: {arr}')
+    arr_offset = (arr - arr.min()) / (arr.max() - arr.min())
+    print(f'arr_offset: {arr_offset}')
+    arr_scaled = arr_offset / arr_offset.sum()
+    print(f'arr_scaled: {arr_scaled}')
+    return arr_scaled
+
+
 def joint_probability(people, one_gene, two_genes, have_trait):
     """
     Compute and return a joint probability.
@@ -378,38 +388,48 @@ def normalize(probabilities):
     print(f'probabilities before normalization: {probabilities}')
 
     # get probabilites of gene and trait as lists for each person
-    probabilities_copy = copy.deepcopy(probabilities)
-    gene_list = []
-    trait_list = []
-    for person in probabilities_copy:
+    persons_list = probabilities.keys()
+    for person in persons_list:
         print(f'gene content for {person}: {probabilities[person]["gene"]}')
-        # append values to gene_list
-        for i in range(3):
-            gene_list.append(probabilities_copy[person]["gene"][i])
+        gene_list = []
+        gene_list_keys = []
+        trait_list = []
+        print(f'gene: {probabilities[person]["gene"]}')
+        for key, value in probabilities[person]["gene"].items():
+            gene_list_keys.append(int(key))
+            gene_list.append(value)
 
         # append values to trait_list
-        trait_list.append(probabilities_copy[person]["trait"][True])
-        trait_list.append(probabilities_copy[person]["trait"][False])
+        trait_list.append(probabilities[person]["trait"][True])
+        trait_list.append(probabilities[person]["trait"][False])
 
-        print(f'gene_prob list: {gene_list}')
-        print(f'trait_prob list: {trait_list}')
+        print(f'gene_list: {gene_list}')
+        print(f'key_list: {gene_list_keys}')
+        print(f'trait_list: {trait_list}')
 
         # turn lists into numpy arrays
         gene_arr = np.asarray(gene_list)
         trait_arr = np.asarray(trait_list)
 
-        # normalize arrays
+        # normalize arrays and turn to lists
+        # gene_list_normalized = normalize_arr(gene_arr, 0, 1)
+        # trait_list_normalized = normalize_arr(trait_arr, 0, 1)
+
         gene_arr = gene_arr / gene_arr.sum()
         trait_arr = trait_arr / trait_arr.sum()
+
+        print(f'normalized arrays: {gene_arr}, {trait_arr}')
 
         # turn normalized arrays back into lists
         gene_list = gene_arr.tolist()
         trait_list = trait_arr.tolist()
+        print(f'gene_list normalized for {person}: {gene_list}')
+        print(f'trait_list normalized for {person}: {trait_list}')
 
         # update probabilites with normalized values
-        probabilities[person]["gene"][0] = gene_list[0]
-        probabilities[person]["gene"][1] = gene_list[1]
-        probabilities[person]["gene"][2] = gene_list[2]
+        probabilities[person]["gene"][gene_list_keys[0]] = gene_list[gene_list_keys[0]]
+        probabilities[person]["gene"][gene_list_keys[1]] = gene_list[gene_list_keys[1]]
+        probabilities[person]["gene"][gene_list_keys[2]] = gene_list[gene_list_keys[2]]
         probabilities[person]["trait"][True] = trait_list[0]
         probabilities[person]["trait"][False] = trait_list[1]
 
