@@ -333,7 +333,11 @@ def update(probabilities, one_gene, two_genes, have_trait, p):
     Which value for each distribution is updated depends on whether
     the person is in `have_gene` and `have_trait`, respectively.
     """
-    for person in probabilities:
+    print('inside update')
+    probabilities_list = list(probabilities.keys())
+    print(f'before updating probabilities dict: {probabilities}')
+
+    for person in probabilities_list:
         if person in one_gene:
             probabilities[person]["gene"][1] += p
         elif person in two_genes:
@@ -347,6 +351,8 @@ def update(probabilities, one_gene, two_genes, have_trait, p):
         else:
             # no trait
             probabilities[person]["trait"][False] += p
+
+    print(f'updated probabilities dict: {probabilities}')
 
 
 def normalize(probabilities):
