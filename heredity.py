@@ -209,10 +209,6 @@ def joint_probability(people, one_gene, two_genes, have_trait):
         * everyone in set `have_trait` has the trait, and
         * everyone not in set` have_trait` does not have the trait.
     """
-    one_gene = {"Harry"}
-    two_genes = {"James"}
-    have_trait = {"James"}
-
     print(f'people: {people}')
     print(f'one_gene: {one_gene}')
     print(f'two_genes: {two_genes}')
@@ -242,6 +238,7 @@ def joint_probability(people, one_gene, two_genes, have_trait):
                 # conditional probability
                 print('no gene, has parents, calculate answer')
             else:
+                print('no parents')
                 # no parents, unconditional probability
                 p_gene = PROBS["gene"][0]
 
@@ -299,13 +296,13 @@ def joint_probability(people, one_gene, two_genes, have_trait):
 
                     # either gene comes from mother, not father; or not from mother, but father
                     p_gene = p_gene_mother * p_gene_father_not + p_gene_mother_not * p_gene_father
-                    print(f'p_one_gene: {p_gene}')
 
                 # add probabilities for 2 grandparents
 
                 # add probabilities for 4 grandparents
 
             else:
+                print('no parents')
                 # no parents, unconditional probability
                 p_gene = PROBS["gene"][1]
 
@@ -326,7 +323,9 @@ def joint_probability(people, one_gene, two_genes, have_trait):
             if parents:
                 # conditional probability
                 print('two genes, has parents, calculate answer')
+
             else:
+                print('no parents')
                 # no parents, unconditional probability
                 p_gene = PROBS["gene"][2]
 
@@ -337,12 +336,14 @@ def joint_probability(people, one_gene, two_genes, have_trait):
                 # probability of having no trait
                 p_trait = PROBS["trait"][2][False]
 
+            # calculate probability of two genes and trait status
             p_two_genes_trait = p_gene * p_trait
             print(f'p_two_genes_trait: {p_two_genes_trait}')
 
     p_joint = p_no_gene_trait * p_one_gene_trait * p_two_genes_trait
     print(f'p_joint probability: {p_joint}')
 
+    print('leaving joint_probability function')
     return p_joint
 
 
@@ -353,7 +354,20 @@ def update(probabilities, one_gene, two_genes, have_trait, p):
     Which value for each distribution is updated depends on whether
     the person is in `have_gene` and `have_trait`, respectively.
     """
-    raise NotImplementedError
+    for person in probabilities:
+        if person in one_gene:
+            probabilities[person]["gene"][1] += p
+        elif person in two_genes:
+            probabilities[person]["gene"][2] += p
+        else:
+            # no gene
+            probabilities[person]["gene"][0] += p
+
+        if person in have_trait:
+            probabilities[person]["trait"][True] += p
+        else:
+            # no trait
+            probabilities[person]["trait"][False] += p
 
 
 def normalize(probabilities):
