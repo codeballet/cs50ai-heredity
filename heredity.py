@@ -209,8 +209,6 @@ def joint_probability(people, one_gene, two_genes, have_trait):
         * everyone in set `have_trait` has the trait, and
         * everyone not in set` have_trait` does not have the trait.
     """
-    p_joint = 0
-
     one_gene = {"Harry"}
     two_genes = {"James"}
     have_trait = {"James"}
@@ -220,64 +218,8 @@ def joint_probability(people, one_gene, two_genes, have_trait):
     print(f'two_genes: {two_genes}')
     print(f'have_trait: {have_trait}')
 
-    # unconditional one_gene probabilities
-    u_one_gene_list = list(one_gene)
-    u_p_one_gene = []
-    if len(u_one_gene_list) != 0:
-        for person in u_one_gene_list:
-            u_p_one_gene.append(PROBS["gene"][1])
-
-    # unconditional two_genes probabilities
-    u_two_genes_list = list(two_genes)
-    u_p_two_genes = []
-    if len(u_two_genes_list) != 0:
-        for person in u_two_genes_list:
-            u_p_two_genes.append(PROBS["gene"][2])
-
-    # unconditional no_gene probabilities
-    u_no_gene_list = []
-    u_p_no_gene = []
-    for person in people:
-        if person not in one_gene and person not in two_genes:
-            u_no_gene_list.append(person)
-
-    if len(u_no_gene_list) != 0:
-        for person in u_no_gene_list:
-            u_p_no_gene.append(PROBS["gene"][0])
-
-    # have_trait probabilities
-    have_trait_list = list(have_trait)
-    p_have_trait = []
-    if len(have_trait_list) != 0:
-        for person in have_trait_list:
-            p_have_trait.append(PROBS["trait"][0][True])
-
-    # no_trait probabilities, given no gene
-    no_trait_no_gene_list = []
-    p_no_trait_no_gene = []
-
-    for person in people:
-        if person not in have_trait:
-            if person not in one_gene:
-                if person not in two_genes:
-                    no_trait_no_gene_list.append(person)
-
-    if len(no_trait_no_gene_list) != 0:
-        for person in no_trait_no_gene_list:
-            p_no_trait_no_gene.append(PROBS["trait"][0][False])
-
-    print(f'u_one_gene_list: {u_one_gene_list}')
-    print(f'u_p_one_gene: {u_p_one_gene}')
-    print(f'u_two_genes_list: {u_two_genes_list}')
-    print(f'u_p_two_genes: {u_p_two_genes}')
-    print(f'u_no_gene_list: {u_no_gene_list}')
-    print(f'u_p_no_gene: {u_p_no_gene}')
-    print(f'have_trait_list: {have_trait_list}')
-    print(f'p_have_trait: {p_have_trait}')
-    print(f'no_trait_no_gene_list: {no_trait_no_gene_list}')
-    print(f'p_no_trait_no_gene: {p_no_trait_no_gene}')
-
     # variables for joint probability calculation
+    p_joint = 0
     p_no_gene_trait = 0
     p_one_gene_trait = 0
     p_two_genes_trait = 0
