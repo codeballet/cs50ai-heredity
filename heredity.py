@@ -224,16 +224,6 @@ def gene_state(person, one_gene, two_genes):
         return 0
 
 
-def normalize_arr(arr):
-    print('inside normalize_arr')
-    print(f'arr: {arr}')
-    arr_offset = (arr - arr.min()) / (arr.max() - arr.min())
-    print(f'arr_offset: {arr_offset}')
-    arr_scaled = arr_offset / arr_offset.sum()
-    print(f'arr_scaled: {arr_scaled}')
-    return arr_scaled
-
-
 def joint_probability(people, one_gene, two_genes, have_trait):
     """
     Compute and return a joint probability.
