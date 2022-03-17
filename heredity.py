@@ -1,7 +1,8 @@
-import copy
 import csv
+import copy
 import itertools
 import sys
+import numpy as np
 
 PROBS = {
 
@@ -194,10 +195,6 @@ def gene_state(person, one_gene, two_genes):
         return 0
 
 
-def prob_uncond(person, count):
-    return PROBS["gene"][count]
-
-
 def joint_probability(people, one_gene, two_genes, have_trait):
     """
     Compute and return a joint probability.
@@ -216,9 +213,9 @@ def joint_probability(people, one_gene, two_genes, have_trait):
 
     # variables for joint probability calculation
     p_joint = 0
-    p_no_gene_trait = 0
-    p_one_gene_trait = 0
-    p_two_genes_trait = 0
+    p_no_gene_trait = 1
+    p_one_gene_trait = 1
+    p_two_genes_trait = 1
 
     # iterate through people
     for person in people:
@@ -231,28 +228,6 @@ def joint_probability(people, one_gene, two_genes, have_trait):
         p_trait = 0
         parents = dict()
         parents = ancestors(people, person, parents)
-
-        # calculate no_gene probability
-        if person not in one_gene and person not in two_genes:
-            if parents:
-                # conditional probability
-                print('no gene, has parents, calculate answer')
-            else:
-                print('no parents')
-                # no parents, unconditional probability
-                p_gene = PROBS["gene"][0]
-
-            # probability of trait / no trait with no gene
-            if person in have_trait:
-                p_trait = PROBS["trait"][0][True]
-            else:
-                # probability of having no trait
-                p_trait = PROBS["trait"][0][False]
-
-            # calculate probability of no gene and trait status
-            p_no_gene_trait = p_gene * p_trait
-            print(
-                f'p_no_gene_trait: {p_no_gene_trait}')
 
         # calculate one_gene probability
         if person in one_gene:
@@ -319,7 +294,7 @@ def joint_probability(people, one_gene, two_genes, have_trait):
                 f'p_one_gene_trait: {p_one_gene_trait}')
 
         # calculate two_genes probability
-        if person in two_genes:
+        elif person in two_genes:
             if parents:
                 # conditional probability
                 print('two genes, has parents, calculate answer')
@@ -339,6 +314,28 @@ def joint_probability(people, one_gene, two_genes, have_trait):
             # calculate probability of two genes and trait status
             p_two_genes_trait = p_gene * p_trait
             print(f'p_two_genes_trait: {p_two_genes_trait}')
+
+        # calculate no_gene probability
+        else:
+            if parents:
+                # conditional probability
+                print('no gene, has parents, calculate answer')
+            else:
+                print('no parents')
+                # no parents, unconditional probability
+                p_gene = PROBS["gene"][0]
+
+            # probability of trait / no trait with no gene
+            if person in have_trait:
+                p_trait = PROBS["trait"][0][True]
+            else:
+                # probability of having no trait
+                p_trait = PROBS["trait"][0][False]
+
+            # calculate probability of no gene and trait status
+            p_no_gene_trait = p_gene * p_trait
+            print(
+                f'p_no_gene_trait: {p_no_gene_trait}')
 
     p_joint = p_no_gene_trait * p_one_gene_trait * p_two_genes_trait
     print(f'p_joint probability: {p_joint}')
@@ -375,7 +372,47 @@ def normalize(probabilities):
     Update `probabilities` such that each probability distribution
     is normalized (i.e., sums to 1, with relative proportions the same).
     """
-    raise NotImplementedError
+    print('in normalize')
+    print(f'probabilities before normalization: {probabilities}')
+
+    # get probabilites of gene and trait as lists for each person
+    probabilities_copy = copy.deepcopy(probabilities)
+    gene_list = []
+    trait_list = []
+    for person in probabilities_copy:
+        print(f'gene content for {person}: {probabilities[person]["gene"]}')
+        # append values to gene_list
+        for i in range(3):
+            gene_list.append(probabilities_copy[person]["gene"][i])
+
+        # append values to trait_list
+        trait_list.append(probabilities_copy[person]["trait"][True])
+        trait_list.append(probabilities_copy[person]["trait"][False])
+
+        print(f'gene_prob list: {gene_list}')
+        print(f'trait_prob list: {trait_list}')
+
+        # turn lists into numpy arrays
+        gene_arr = np.asarray(gene_list)
+        trait_arr = np.asarray(trait_list)
+
+        # normalize arrays
+        gene_arr = gene_arr / gene_arr.sum()
+        trait_arr = trait_arr / trait_arr.sum()
+
+        # turn normalized arrays back into lists
+        gene_list = gene_arr.tolist()
+        trait_list = trait_arr.tolist()
+
+        # update probabilites with normalized values
+        probabilities[person]["gene"][0] = gene_list[0]
+        probabilities[person]["gene"][1] = gene_list[1]
+        probabilities[person]["gene"][2] = gene_list[2]
+        probabilities[person]["trait"][True] = trait_list[0]
+        probabilities[person]["trait"][False] = trait_list[1]
+
+    print(f'probabilities after normalization: {probabilities}')
+    print('leaving normalize')
 
 
 if __name__ == "__main__":
