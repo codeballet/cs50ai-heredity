@@ -132,6 +132,7 @@ def powerset(s):
 
 def ancestors(people, person, d, l):
     # recursively build dictionary of ancestors
+    # get parents for person
     parents = get_parents(people, person)
 
     if len(l) == 0 and all(v is None for v in parents):
@@ -213,7 +214,7 @@ def gene_state(person, one_gene, two_genes):
 
 
 def get_parents(people, person):
-    # return parents of everyone in checking
+    # get parents for person
     mother = people.get(person, {}).get("mother", None)
     father = people.get(person, {}).get("father", None)
 
