@@ -4,6 +4,7 @@ import itertools
 import sys
 import numpy as np
 
+
 PROBS = {
 
     # Unconditional probabilities for having gene
@@ -129,40 +130,29 @@ def powerset(s):
     ]
 
 
-def ancestors(people, person, ancestor_dict):
-    # get ancestors two generations back
-    mother = people.get(person, {}).get("mother", None)
-    father = people.get(person, {}).get("father", None)
-    mother_mother = people.get(mother, {}).get("mother", None)
-    mother_father = people.get(mother, {}).get("father", None)
-    father_mother = people.get(father, {}).get("mother", None)
-    father_father = people.get(father, {}).get("father", None)
+def ancestors(people, person, d, l):
+    # recursively build dictionary of ancestors
+    parents = get_parents(people, person)
 
-    # lists of ancestors
-    parents = [mother, father]
-    mother_grandparents = [mother_mother, mother_father]
-    father_grandparents = [father_mother, father_father]
-
-    if all(v is None for v in parents):
-        # no parents found
-        return False
-
-    # add parents to dictionary
-    ancestor_dict["mother"] = mother
-    ancestor_dict["father"] = father
-
-    # check for grandparents
-    if not all(v is None for v in mother_grandparents):
-        # mother has parents, add to dict
-        ancestor_dict["mother_mother"] = mother_mother
-        ancestor_dict["mother_father"] = mother_father
-
-    if not all(v is None for v in father_grandparents):
-        # father has parents, add to dict
-        ancestor_dict["father_mother"] = father_mother
-        ancestor_dict["father_father"] = father_father
-
-    return ancestor_dict
+    if len(l) == 0 and all(v is None for v in parents):
+        # base case, empty list and no parents found
+        return d
+    elif len(l) != 0 and all(v is None for v in parents):
+        # list not empty and no parents found
+        # recursively call function, removing parent from list
+        l_copy = copy.deepcopy(l)
+        for parent in l:
+            l_copy.remove(parent)
+            return ancestors(people, parent, d, l_copy)
+    else:
+        # parents found, add to dict and list
+        d[person] = parents
+        l.extend(parents)
+        # recursively call function, removing parent from list
+        l_copy = copy.deepcopy(l)
+        for parent in l:
+            l_copy.remove(parent)
+            return ancestors(people, parent, d, l_copy)
 
 
 def ancestors_calc(people, person, one_gene, two_genes):
@@ -222,6 +212,14 @@ def gene_state(person, one_gene, two_genes):
         return 0
 
 
+def get_parents(people, person):
+    # return parents of everyone in checking
+    mother = people.get(person, {}).get("mother", None)
+    father = people.get(person, {}).get("father", None)
+
+    return [mother, father]
+
+
 def joint_probability(people, one_gene, two_genes, have_trait):
     """
     Compute and return a joint probability.
@@ -244,12 +242,14 @@ def joint_probability(people, one_gene, two_genes, have_trait):
     for person in people:
         p_gene = 0
         p_trait = 0
-        parents = dict()
-        parents = ancestors(people, person, parents)
+        d = dict()
+        l = list()
+        ancestor_dict = ancestors(people, person, d, l)
+        print(f'in joint_probability, ancestor_dict: {ancestor_dict}')
 
         # calculate one_gene probability
         if person in one_gene:
-            if parents:
+            if ancestor_dict:
                 # conditional probability
                 p_gene = ancestors_calc(people, person, one_gene, two_genes)
             else:
@@ -271,7 +271,7 @@ def joint_probability(people, one_gene, two_genes, have_trait):
 
         # calculate two_genes probability
         elif person in two_genes:
-            if parents:
+            if ancestor_dict:
                 # conditional probability
                 p_gene = ancestors_calc(people, person, one_gene, two_genes)
             else:
@@ -293,7 +293,7 @@ def joint_probability(people, one_gene, two_genes, have_trait):
 
         # calculate no_gene probability
         else:
-            if parents:
+            if ancestor_dict:
                 # conditional probability
                 p_gene = ancestors_calc(people, person, one_gene, two_genes)
             else:
