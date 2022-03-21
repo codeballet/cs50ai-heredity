@@ -131,6 +131,9 @@ def powerset(s):
 
 
 def ancestors_calc(people, parents, person, one_gene, two_genes):
+    """
+    return probability, taking ancestors into account, two levels up
+    """
     mother = parents[0]
     father = parents[1]
 
@@ -279,6 +282,9 @@ def person_prob(person, one_gene, two_genes):
 
 
 def person_trait(person, one_gene, two_genes, have_trait):
+    """
+    return probability of having or not having trait
+    """
     if person in one_gene:
         if person in have_trait:
             return PROBS["trait"][1][True]
