@@ -25,13 +25,22 @@ The statistics that the AI uses to make inferences about populations are defined
 # How to run the AI
 
 The AI uses numpy for calculations, so you need to install the numpy dependency. You may use the command:
-`pip install -r requirements.txt`
+
+```
+pip install -r requirements.txt
+```
 
 To run the program, enter:
-`python heredity.py <datafile>`
+
+```
+python heredity.py <datafile>
+```
 
 For instance, if you want to run the program with the provided file in `data/family0.csv`, you would run:
-`python heredity.py data/family0.csv`
+
+```
+python heredity.py data/family0.csv
+```
 
 # Intellectual Property Rights
 
