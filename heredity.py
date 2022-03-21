@@ -194,6 +194,28 @@ def person_prob(person, one_gene, two_genes):
         return PROBS["gene"][0]
 
 
+def person_trait(person, one_gene, two_genes, have_trait):
+    if person in one_gene:
+        if person in have_trait:
+            return PROBS["trait"][1][True]
+        else:
+            # probability of having no trait
+            return PROBS["trait"][1][False]
+    elif person in two_genes:        
+        if person in have_trait:
+            return PROBS["trait"][2][True]
+        else:
+            # probability of having no trait
+            return PROBS["trait"][2][False]
+    else:
+        # no gene
+        if person in have_trait:
+            return PROBS["trait"][0][True]
+        else:
+            # probability of having no trait
+            return PROBS["trait"][0][False]
+
+
 def parents_calc(people, person, one_gene, two_genes):
     """
     return the probability of inheriting the gene from parents
@@ -286,7 +308,6 @@ def joint_probability(people, one_gene, two_genes, have_trait):
     # iterate through people
     for person in people:
         p_gene = 0
-        p_trait = 0
         p_gene_trait = 0
         ancestor_dict = ancestors(people, person, {}, [])
 
@@ -298,25 +319,7 @@ def joint_probability(people, one_gene, two_genes, have_trait):
             p_gene = person_prob(person, one_gene, two_genes)
 
         # probability of having or not having trait
-        if person in one_gene:
-            if person in have_trait:
-                p_trait = PROBS["trait"][1][True]
-            else:
-                # probability of having no trait
-                p_trait = PROBS["trait"][1][False]
-        elif person in two_genes:        
-            if person in have_trait:
-                p_trait = PROBS["trait"][2][True]
-            else:
-                # probability of having no trait
-                p_trait = PROBS["trait"][2][False]
-        else:
-            # no gene
-            if person in have_trait:
-                p_trait = PROBS["trait"][0][True]
-            else:
-                # probability of having no trait
-                p_trait = PROBS["trait"][0][False]
+        p_trait = person_trait(person, one_gene, two_genes, have_trait)
 
         # calculate probability for gene and trait, register value
         p_gene_trait = p_gene * p_trait
