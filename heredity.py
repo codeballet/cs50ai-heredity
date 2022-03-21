@@ -130,37 +130,11 @@ def powerset(s):
     ]
 
 
-def ancestors(people, person, d, l):
-    """
-    recursively build and return dictionary of ancestors
-    """
-    # get parents for person
-    parents = get_parents(people, person)
-
-    if len(l) == 0 and all(v is None for v in parents):
-        # base case, list empty and no parents found
-        return d
-    elif len(l) != 0 and all(v is None for v in parents):
-        # list not empty and no parents found
-        # recursively call function, removing parent from list
-        l_copy = copy.deepcopy(l)
-        for parent in l:
-            l_copy.remove(parent)
-            return ancestors(people, parent, d, l_copy)
-    else:
-        # parents found, add to dict and list
-        d[person] = parents
-        l.extend(parents)
-        # recursively call function, removing parent from list
-        l_copy = copy.deepcopy(l)
-        for parent in l:
-            l_copy.remove(parent)
-            return ancestors(people, parent, d, l_copy)
-
-
 def ancestors_calc(people, parents, person, one_gene, two_genes):
     mother = parents[0]
     father = parents[1]
+
+    # list to store inherited values from grandparents
     p_inherited = [None, None]
 
     # make list of grandparents
