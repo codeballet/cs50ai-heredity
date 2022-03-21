@@ -1,4 +1,4 @@
-# Introduction to Heredity
+# Introduction to the Artificial Intelligence Heredity
 
 Heredity is an Artificial Intelligence that assess the likelihood of a person having a particular genetic trait.
 
