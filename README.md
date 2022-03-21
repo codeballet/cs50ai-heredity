@@ -12,7 +12,9 @@ Given information about people, who their parents are, and whether they have a p
 
 # Structure for the data input to the AI
 
-The AI reads CSV files containing data structured in columns: name, mother, father, and trait.
+The AI reads CSV files containing data structured in columns: name, mother, father, trait.
+
+The data should be of the types: string, string, string, integer.
 
 As an example, the provided file `data/family0.csv` indicates that Harry has Lily as a mother, James as a father, and the empty cell for trait means we don’t know whether Harry has the trait or not. James, meanwhile, has no parents listed in the our data set (as indicated by the empty cells for mother and father), and does exhibit the trait (as indicated by the 1 in the trait cell). Lily, on the other hand, also has no parents listed in the data set, but does not exhibit the trait (as indicated by the 0 in the trait cell).
 
