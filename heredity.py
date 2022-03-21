@@ -159,17 +159,16 @@ def ancestors(people, person, d, l):
 
 
 def ancestors_calc(people, person, one_gene, two_genes, ancestor_dict):
-    print('in ancestors_calc')
     print(f'ancestor_dict: {ancestor_dict}')
     print(f'checking for person: {person}')
-    ancestor_dict_copy = copy.deepcopy(ancestor_dict)
     for ancestor in ancestor_dict:
         print(f'iterating on: {ancestor}')
-        ancestor_dict_copy.pop(ancestor)
         for parent in ancestor_dict[ancestor]:
             if parent not in ancestor_dict:
-                # base case, ancestor has no parents
-                print('ancestor has no parents')
+                # no parent
+                print('parent {parent} has no further parents')
+                # get probability
+
                 p_gene = parents_calc(people, person, one_gene, two_genes)
                 print(f'p_gene for {ancestor}: {p_gene}')
                 return p_gene
@@ -178,7 +177,21 @@ def ancestors_calc(people, person, one_gene, two_genes, ancestor_dict):
                 print(f'mother of {ancestor}: {ancestor_dict[ancestor][0]}')
                 print(f'father of {ancestor}: {ancestor_dict[ancestor][1]}')
                 for parent in ancestor_dict[ancestor]:
-                    return ancestors_calc(people, parent, one_gene, two_genes, ancestor_dict_copy)
+                    return ancestors_calc(people, parent, one_gene, two_genes)
+
+
+def person_prob(person, one_gene, two_genes):
+    """
+    return unconditional probability for a person to have the gene
+    """
+    print('in person_prob')
+    if person in one_gene:
+        return PROBS["gene"][1]
+    elif person in two_genes:
+        return PROBS["gene"][2]
+    else:
+        # no gene
+        return PROBS["gene"][0]
 
 
 def parents_calc(people, person, one_gene, two_genes):
@@ -218,15 +231,15 @@ def parents_calc(people, person, one_gene, two_genes):
 
     # calculate probability of inheriting gene
     if person in one_gene:
-        # gene either comes:
-        # from mother, not from father; or not from mother, but from father
+        # gene either: from mother, not from father
+        # or: not from mother, from father
         # add up the two possibilities
         p_gene = p_gene_mother * p_gene_father_not + p_gene_mother_not * p_gene_father
     elif person in two_genes:
-        # gene comes from mother and father
+        # gene from mother and father
         p_gene = p_gene_mother * p_gene_father
     else:
-        # no gene from mother, no gene from father
+        # gene not from mother, not from father
         p_gene = p_gene_mother_not * p_gene_father_not
         
     return p_gene
@@ -282,13 +295,7 @@ def joint_probability(people, one_gene, two_genes, have_trait):
             p_gene = ancestors_calc(people, person, one_gene, two_genes, ancestor_dict)
         else:
             # no parents, get unconditional probability
-            if person in one_gene:
-                p_gene = PROBS["gene"][1]
-            elif person in two_genes:
-                p_gene = PROBS["gene"][2]
-            else:
-                # no gene
-                p_gene = PROBS["gene"][0]
+            p_gene = person_prob(person, one_gene, two_genes)
 
         # probability of having or not having trait
         if person in one_gene:
@@ -311,7 +318,7 @@ def joint_probability(people, one_gene, two_genes, have_trait):
                 # probability of having no trait
                 p_trait = PROBS["trait"][0][False]
 
-        # calculate probability for gene and trait, then register value
+        # calculate probability for gene and trait, register value
         p_gene_trait = p_gene * p_trait
         p_register.append(p_gene_trait)
 
