@@ -158,26 +158,41 @@ def ancestors(people, person, d, l):
             return ancestors(people, parent, d, l_copy)
 
 
-def ancestors_calc(people, person, one_gene, two_genes, ancestor_dict):
-    print(f'ancestor_dict: {ancestor_dict}')
-    print(f'checking for person: {person}')
-    for ancestor in ancestor_dict:
-        print(f'iterating on: {ancestor}')
-        for parent in ancestor_dict[ancestor]:
-            if parent not in ancestor_dict:
-                # no parent
-                print('parent {parent} has no further parents')
-                # get probability
+def ancestors_calc(people, parents, person, one_gene, two_genes):
+    mother = parents[0]
+    father = parents[1]
+    p_inherited = [None, None]
 
-                p_gene = parents_calc(people, person, one_gene, two_genes)
-                print(f'p_gene for {ancestor}: {p_gene}')
-                return p_gene
-            else:
-                # ancestor has parents
-                print(f'mother of {ancestor}: {ancestor_dict[ancestor][0]}')
-                print(f'father of {ancestor}: {ancestor_dict[ancestor][1]}')
-                for parent in ancestor_dict[ancestor]:
-                    return ancestors_calc(people, parent, one_gene, two_genes)
+    # make list of grandparents
+    grandparents = []
+    grandparents.extend(get_parents(people, mother))
+    grandparents.extend(get_parents(people, father))
+
+    # check for grandparents
+    if all(v is None for v in grandparents):
+        # no grandparents, get probabilities list of parents
+        p_parents = parents_calc(mother, father, one_gene, two_genes, p_inherited)
+        # return the probability of inheritance
+        return inheriting_calc(person, one_gene, two_genes, p_parents)
+    elif any(v is not None for v in grandparents):
+        # person has grandparents
+        if grandparents[0] and grandparents[1]:
+            # grandparents on mother's side
+            # get probabilities list of mother's parents
+            p_parents = parents_calc(grandparents[0], grandparents[1], one_gene, two_genes, p_inherited)
+            # inheritance probability of mother
+            p_gene_mother = inheriting_calc(mother, one_gene, two_genes, p_parents)
+            p_inherited[0] = p_gene_mother
+        if grandparents[2] and grandparents[3]:
+            #grandparents on father's side
+            # get probabilites list of father's parents
+            p_parents = parents_calc(grandparents[2], grandparents[3], one_gene, two_genes, p_inherited)
+            p_gene_father = inheriting_calc(father, one_gene, two_genes, p_parents)
+            p_inherited[1] = p_gene_father
+
+        # get inherited probability for person
+        p_parents = parents_calc(mother, father, one_gene, two_genes, p_inherited)
+        return inheriting_calc(person, one_gene, two_genes, p_parents)
 
 
 def gene_state(person, one_gene, two_genes):
@@ -203,42 +218,64 @@ def get_parents(people, person):
     return [mother, father]
 
 
-def parents_calc(people, person, one_gene, two_genes):
+def parents_calc(mother, father, one_gene, two_genes, p_inherited):
     """
-    return the probability of inheriting the gene from parents
+    return list of probabilities for mother and father 
+    to have and not have gene
     """
-    p_gene = 0
-    mother = people[person]["mother"]
-    father = people[person]["father"]
-    
-    mother_gene_state = gene_state(mother, one_gene, two_genes)
-    father_gene_state = gene_state(father, one_gene, two_genes)
-
-    # probability of getting gene from mother
-    if mother_gene_state == 0:
-        p_gene_mother = PROBS["mutation"]
-        p_gene_mother_not = 1 - p_gene_mother
-    elif mother_gene_state == 1:
-        p_gene_mother = 0.5
+    # get inherited probability values for mother, if they exist
+    if p_inherited[0] != None:
+        p_gene_mother = p_inherited[0]
         p_gene_mother_not = 1 - p_gene_mother
     else:
-        # mother has two genes
-        p_gene_mother = 1 - PROBS["mutation"]
-        p_gene_mother_not = 1 - p_gene_mother
+        # get gene state for mother
+        mother_gene_state = gene_state(mother, one_gene, two_genes)
+        # get uncondinional probability values for mother
+        if mother_gene_state == 0:
+            p_gene_mother = PROBS["mutation"]
+            p_gene_mother_not = 1 - p_gene_mother
+        elif mother_gene_state == 1:
+            p_gene_mother = 0.5
+            p_gene_mother_not = 1 - p_gene_mother
+        else:
+            # mother has two genes
+            p_gene_mother = 1 - PROBS["mutation"]
+            p_gene_mother_not = 1 - p_gene_mother
 
-    # probability of getting gene from father
-    if father_gene_state == 0:
-        p_gene_father = PROBS["mutation"]
-        p_gene_father_not = 1 - p_gene_father
-    elif father_gene_state == 1:
-        p_gene_father = 0.5
+    # get inherited probability values for father, if they exist
+    if p_inherited[1] != None:
+        p_gene_father = p_inherited[1]
         p_gene_father_not = 1 - p_gene_father
     else:
-        # father has two genes
-        p_gene_father = 1 - PROBS["mutation"]
-        p_gene_father_not = 1 - p_gene_father
+        # get gene state for father
+        father_gene_state = gene_state(father, one_gene, two_genes)
+        # get unconditional probability values for father
+        if father_gene_state == 0:
+            p_gene_father = PROBS["mutation"]
+            p_gene_father_not = 1 - p_gene_father
+        elif father_gene_state == 1:
+            p_gene_father = 0.5
+            p_gene_father_not = 1 - p_gene_father
+        else:
+            # father has two genes
+            p_gene_father = 1 - PROBS["mutation"]
+            p_gene_father_not = 1 - p_gene_father
 
-    # calculate probability of inheriting gene
+    p_parents = [p_gene_mother, p_gene_mother_not, p_gene_father, p_gene_father_not]
+
+    return p_parents
+
+
+def inheriting_calc(person, one_gene, two_genes, p_parents):
+    """
+    return conditional probability of inheriting the gene from parents,
+    given a list of probabilites of parents having and not having gene
+    """
+    p_gene_mother = p_parents[0]
+    p_gene_mother_not = p_parents[1]
+    p_gene_father = p_parents[2]
+    p_gene_father_not = p_parents[3]
+
     if person in one_gene:
         # gene either: from mother, not from father
         # or: not from mother, from father
@@ -308,11 +345,12 @@ def joint_probability(people, one_gene, two_genes, have_trait):
     for person in people:
         p_gene = 0
         p_gene_trait = 0
-        ancestor_dict = ancestors(people, person, {}, [])
+        parents = get_parents(people, person)
+        # ancestor_dict = ancestors(people, person, {}, [])
 
-        if len(ancestor_dict) != 0:
+        if all(v is not None for v in parents):
             # have parents, get conditional probability
-            p_gene = ancestors_calc(people, person, one_gene, two_genes, ancestor_dict)
+            p_gene = ancestors_calc(people, parents, person, one_gene, two_genes)
         else:
             # no parents, get unconditional probability
             p_gene = person_prob(person, one_gene, two_genes)
