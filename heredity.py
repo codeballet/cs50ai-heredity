@@ -180,40 +180,27 @@ def ancestors_calc(people, person, one_gene, two_genes, ancestor_dict):
                     return ancestors_calc(people, parent, one_gene, two_genes)
 
 
-def person_prob(person, one_gene, two_genes):
+def gene_state(person, one_gene, two_genes):
     """
-    return unconditional probability for a person to have the gene
+    return how many genes the person has
     """
-    print('in person_prob')
     if person in one_gene:
-        return PROBS["gene"][1]
+        return 1
     elif person in two_genes:
-        return PROBS["gene"][2]
+        return 2
     else:
-        # no gene
-        return PROBS["gene"][0]
+        return 0
 
 
-def person_trait(person, one_gene, two_genes, have_trait):
-    if person in one_gene:
-        if person in have_trait:
-            return PROBS["trait"][1][True]
-        else:
-            # probability of having no trait
-            return PROBS["trait"][1][False]
-    elif person in two_genes:        
-        if person in have_trait:
-            return PROBS["trait"][2][True]
-        else:
-            # probability of having no trait
-            return PROBS["trait"][2][False]
-    else:
-        # no gene
-        if person in have_trait:
-            return PROBS["trait"][0][True]
-        else:
-            # probability of having no trait
-            return PROBS["trait"][0][False]
+def get_parents(people, person):
+    """
+    return list of parents for a person
+    if no parents, the list contains None elements
+    """
+    mother = people.get(person, {}).get("mother", None)
+    father = people.get(person, {}).get("father", None)
+
+    return [mother, father]
 
 
 def parents_calc(people, person, one_gene, two_genes):
@@ -267,27 +254,39 @@ def parents_calc(people, person, one_gene, two_genes):
     return p_gene
 
 
-def gene_state(person, one_gene, two_genes):
+def person_prob(person, one_gene, two_genes):
     """
-    return how many genes the person has
+    return unconditional probability for a person to have the gene
     """
     if person in one_gene:
-        return 1
+        return PROBS["gene"][1]
     elif person in two_genes:
-        return 2
+        return PROBS["gene"][2]
     else:
-        return 0
+        # no gene
+        return PROBS["gene"][0]
 
 
-def get_parents(people, person):
-    """
-    return list of parents for a person
-    if no parents, the list contains None elements
-    """
-    mother = people.get(person, {}).get("mother", None)
-    father = people.get(person, {}).get("father", None)
-
-    return [mother, father]
+def person_trait(person, one_gene, two_genes, have_trait):
+    if person in one_gene:
+        if person in have_trait:
+            return PROBS["trait"][1][True]
+        else:
+            # probability of having no trait
+            return PROBS["trait"][1][False]
+    elif person in two_genes:        
+        if person in have_trait:
+            return PROBS["trait"][2][True]
+        else:
+            # probability of having no trait
+            return PROBS["trait"][2][False]
+    else:
+        # no gene
+        if person in have_trait:
+            return PROBS["trait"][0][True]
+        else:
+            # probability of having no trait
+            return PROBS["trait"][0][False]
 
 
 def joint_probability(people, one_gene, two_genes, have_trait):
